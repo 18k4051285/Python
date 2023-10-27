@@ -1,23 +1,21 @@
 import os
-from tkinter import Tk
-from tkinter.filedialog import askdirectory
+import tkinter as tk
+from tkinter import filedialog
 from PIL import Image
+from tkinter import messagebox
 
-# Create a Tkinter root window (it won't be displayed)
-root = Tk()
-root.withdraw()
+# Create a function to combine and save the images
+def combine_images():
+    selected_folder = filedialog.askdirectory(title="Select a folder with JPG images")
 
-# Ask the user to select a folder containing JPG images
-selected_folder = askdirectory(title="Select a folder with JPG images")
+    if selected_folder:
+        # List all the JPG files in the selected folder
+        image_files = [f for f in os.listdir(selected_folder) if f.lower().endswith(".jpg")]
 
-# Check if the user selected a folder
-if selected_folder:
-    # List all the JPG files in the selected folder
-    image_files = [f for f in os.listdir(selected_folder) if f.lower().endswith(".jpg")]
+        if not image_files:
+            messagebox.showerror("Error", "No JPG images found in the selected folder.")
+            return
 
-    if not image_files:
-        print("No JPG images found in the selected folder.")
-    else:
         # Sort the files alphabetically (you can change the sorting order if needed)
         image_files.sort()
 
@@ -37,13 +35,31 @@ if selected_folder:
             combined_image.paste(image, (0, y_offset))
             y_offset += image.height
 
-        # Save the combined image as a single JPG file in the same folder
-        combined_image.save(os.path.join(selected_folder, "combined_image.jpg"))
+        # Ask the user to choose a destination folder for the combined image
+        destination_folder = filedialog.askdirectory(title="Select a destination folder for the combined image")
 
-        # Close the individual images
-        for image in images:
-            image.close()
+        if destination_folder:
+            # Save the combined image as a single JPG file in the chosen destination folder
+            combined_image.save(os.path.join(destination_folder, "combined_image.jpg"))
 
-        print(f"Combined image saved as 'combined_image.jpg' in the selected folder.")
-else:
-    print("No folder selected. Please select a folder to proceed.")
+            # Close the individual images
+            for image in images:
+                image.close()
+
+            # Display a popup window with the destination
+            messagebox.showinfo("Process Completed", f"Combined image saved in:\n{destination_folder}")
+
+# Create a Tkinter GUI window
+root = tk.Tk()
+root.title("Combine JPG Images")
+root.geometry("250x150")
+root.minsize(260, 150)
+root.maxsize(260, 150)
+root['background']='#7cabfc'
+# Create a button to trigger the image combining process
+combine_button = tk.Button(root, text="Combine Images", command=combine_images)
+combine_button.pack()
+
+root.mainloop()
+
+
