@@ -1,24 +1,17 @@
-#!/usr/bin/env python
-# pylint: disable=unused-argument
-# This program is dedicated to the public domain under the CC0 license.
 
-"""
-Simple Bot to reply to Telegram messages.
-
-First, a few handler functions are defined. Then, those functions are passed to
-the Application and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-
-Usage:
-Basic Echobot example, repeats messages.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
-"""
-
-import logging
-import mysql.connector
+import datetime #for logtime
+import logging #for logging
+from decouple import config #for .env
+import mysql.connector #for mysql connection
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+
+
+#Sql info
+DB_HOST = config('DB_HOST')
+DB_USER = config('DB_USER')
+DB_PASSWORD = config('DB_PASSWORD')
+DB_NAME = config('DB_NAME')
 
 # Enable logging
 logging.basicConfig(
@@ -49,6 +42,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     await update.message.reply_text(help_text)
 
+# Log commands
+def log_command(parameter, user_id, command):
+    """Log the executed command to a text file."""
+    log_file_path = 'command_log.txt'
+    current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    with open(log_file_path, 'a') as log_file:
+        log_file.write(f"{current_time} - User ID: {user_id} , Command: {command}, Parameter: {parameter}\n")
 
 # ID , Find data with ID
 async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -56,19 +57,19 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     try:
         # Connect to the database
         mydb = mysql.connector.connect(
-            host="localhost",
-            user="hailm",
-            password="123456",
-            database="test"  # Add your actual database name
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME  # Add your actual database name
         )
 
         # Extract the parameter from the command
-        ID = context.args[0] if context.args else None
-
+        id = context.args[0] if context.args else None
+        log_command(id, update.effective_user.id, "/id")
         # Execute a SELECT query with the parameter
         cursor = mydb.cursor()
         #if username:
-        cursor.execute("SELECT * FROM tb_users WHERE ID = %s", (ID,))
+        cursor.execute("SELECT * FROM tb_users WHERE ID = %s", (id,))
         #else:
         #   cursor.execute("SELECT * FROM tb_users")
 
@@ -77,7 +78,7 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
         # Display the results in the chat
         if result:
-            message = f"Data for user {ID}:\n" if ID else "Data from the database:\n"
+            message = f"Data for user {id}:\n" if id else "Data from the database:\n"
             for row in result:
                 id, name, phone, address = row
                 message += f" ID: {id} \n Name: {name} \n Phone : {phone} \n Address: {address}\n"
@@ -104,15 +105,15 @@ async def phone_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     try:
         # Connect to the database
         mydb = mysql.connector.connect(
-            host="localhost",
-            user="hailm",
-            password="123456",
-            database="test"  # Add your actual database name
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME  # Add your actual database name
         )
 
         # Extract the parameter from the command
         phone = context.args[0] if context.args else None
-
+        log_command(phone, update.effective_user.id, "/phone")
         # Execute a SELECT query with the parameter
         cursor = mydb.cursor()
         #if username:
@@ -151,15 +152,15 @@ async def name_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     try:
         # Connect to the database
         mydb = mysql.connector.connect(
-            host="localhost",
-            user="hailm",
-            password="123456",
-            database="test"  # Add your actual database name
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME  # Add your actual database name
         )
 
         # Extract the parameter from the command
         name = context.args[0] if context.args else None
-
+        log_command(name, update.effective_user.id, "/name")
         # Execute a SELECT query with the parameter
         cursor = mydb.cursor()
         #if username:
@@ -211,7 +212,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main() -> None:
     """Start the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token("ADD_TOKEN_VAO_DAY").build()
+    application = Application.builder().token("1451276513:AAESGi6khiOLAehox_linvMhjOpGvtjz3nU").build()
 
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
